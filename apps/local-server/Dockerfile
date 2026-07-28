@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 FROM base as builder
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN apk add --no-cache sqlite curl
 WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 COPY package*.json ./
-RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
+RUN npm install -g pnpm && pnpm install --prod
 COPY --from=builder /app/dist/ ./dist/
 
 RUN mkdir -p ./data ./scripts
