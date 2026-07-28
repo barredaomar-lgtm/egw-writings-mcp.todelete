@@ -50,21 +50,19 @@ RUN npm install -g pnpm && \
 # Copy built application
 COPY --from=builder /app/dist/ ./dist/
 
-# Copy or create database directory
+# Safely create data directory and handle optional db files without crashing build
 RUN mkdir -p ./data
+RUN if ls data/*.db 1>/dev/null 2>&1; then cp data/*.db ./data/; else touch ./data/egw-writings.db; fi
 
-# Copy existing database if available, otherwise create empty directory
-COPY data/*.db ./data/ 2>/dev/null || echo "No database found, will use empty database"
+# Safely handle optional scripts directory
+RUN mkdir -p ./scripts
+COPY scripts/ ./scripts/ 2>/dev/null || true
 
-# Copy extraction script if ZIP files are provided
-COPY scripts/ ./scripts/ 2>/dev/null || echo "No scripts directory found"
-
-# If ZIP files exist, extract them; otherwise create minimal database structure
+# Create database structure if needed
 RUN if [ -d "./scripts" ] && ls ./data/*.zip >/dev/null 2>&1; then \
       echo "📦 ZIP extraction would happen here"; \
     else \
       echo "📂 Using existing database or creating empty structure"; \
-      touch ./data/egw-writings.db; \
     fi
 
 # Create directories for PDF generation
