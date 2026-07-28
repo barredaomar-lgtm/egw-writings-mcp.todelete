@@ -3,8 +3,8 @@
 
 FROM node:22-alpine as base
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++ sqlite curl
+# Install build dependencies (py3-setuptools restores distutils for node-gyp)
+RUN apk add --no-cache python3 py3-setuptools make g++ sqlite curl
 
 WORKDIR /app
 
