@@ -20,11 +20,11 @@ RUN pnpm install --frozen-lockfile
 # Build stage - compile TypeScript
 FROM base as builder
 
-# Move into the specific app folder
-WORKDIR /app/apps/local-server
+# Stay in the root workspace directory to resolve cross-dependencies
+WORKDIR /app
 
-# Build TypeScript within the app directory
-RUN pnpm build
+# Build the server and all of its required monorepo packages
+RUN pnpm --filter @surgbc/egw-research-server... build
 
 # Production stage
 FROM node:22-alpine as production
