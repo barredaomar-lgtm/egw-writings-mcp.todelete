@@ -1,4 +1,4 @@
-"# Multi-stage build for Christian Heritage Archive Server
+# Multi-stage build for Christian Heritage Archive Server
 
 # This creates an offline-capable Docker image with pre-extracted database
 
