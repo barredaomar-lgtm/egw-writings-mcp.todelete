@@ -30,7 +30,7 @@ RUN pnpm --filter @surgbc/egw-research-server... build
 FROM node:22-alpine as production
 
 # Install runtime dependencies
-RUN apk add --no-cache sqlite curl unzip
+RUN apk add --no-cache sqlite curl 7zip
 
 WORKDIR /app
 
@@ -56,7 +56,7 @@ COPY apps/local-server/script[s]/ ./scripts/
 # Stitch split ZIP chunks together, extract the database, and clean up the leftovers
 RUN echo "📦 Reassembling and extracting database..." && \
     cat /app/data/egw-writings-part-* > /app/data/egw-writings.zip && \
-    unzip -o /app/data/egw-writings.zip -d /app/data/ && \
+    7z x -y -o/app/data/ /app/data/egw-writings.zip && \
     cp /app/data/egw-writings.db ./data/egw-writings.db && \
     rm /app/data/egw-writings-part-* /app/data/egw-writings.zip
 
