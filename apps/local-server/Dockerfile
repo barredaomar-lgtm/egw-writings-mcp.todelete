@@ -30,7 +30,7 @@ RUN pnpm --filter @surgbc/egw-research-server... build
 FROM node:22-alpine as production
 
 # Install runtime dependencies
-RUN apk add --no-cache sqlite curl
+RUN apk add --no-cache sqlite curl unzip
 
 WORKDIR /app
 
@@ -53,13 +53,12 @@ COPY apps/local-server/dat[a]/ ./data/
 # Copy extraction script if ZIP files are provided from the root context
 COPY apps/local-server/script[s]/ ./scripts/
 
-# If ZIP files exist, extract them; otherwise create minimal database structure
-RUN if [ -d "./scripts" ] && ls ./data/*.zip >/dev/null 2>&1; then \
-      echo "📦 ZIP extraction would happen here"; \
-    else \
-      echo "📂 Using existing database or creating empty structure"; \
-      touch ./data/egw-writings.db; \
-    fi
+# Stitch split ZIP chunks together, extract the database, and clean up the leftovers
+RUN echo "📦 Reassembling and extracting database..." && \
+    cat /app/data/egw-writings-part-* > /app/data/egw-writings.zip && \
+    unzip -o /app/data/egw-writings.zip -d /app/data/ && \
+    cp /app/data/egw-writings.db ./data/egw-writings.db && \
+    rm /app/data/egw-writings-part-* /app/data/egw-writings.zip
 
 # Create directories for PDF generation
 RUN mkdir -p /tmp/pdf-generation && \
