@@ -53,12 +53,7 @@ COPY apps/local-server/dat[a]/ ./data/
 # Copy extraction script if ZIP files are provided from the root context
 COPY apps/local-server/script[s]/ ./scripts/
 
-# Stitch split ZIP chunks together, extract the database, and clean up the leftovers
-RUN echo "📦 Reassembling and extracting database..." && \
-    cat /app/data/egw-writings-part-* > /app/data/egw-writings.zip && \
-    7z x -y -o/app/data/ /app/data/egw-writings.zip && \
-    cp /app/data/egw-writings.db ./data/egw-writings.db && \
-    rm /app/data/egw-writings-part-* /app/data/egw-writings.zip
+# Build-time extraction removed. Database will be extracted at runtime to bypass Docker limits.
 
 # Create directories for PDF generation
 RUN mkdir -p /tmp/pdf-generation && \
@@ -70,12 +65,12 @@ USER nodejs
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check (Extended start-period to 5 minutes to allow for runtime DB extraction)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-# Default command - HTTP server mode
-CMD ["node", "dist/server.js", "--http", "--port", "3000"]
+# Default command - Extract at runtime to bypass Docker limits, then start HTTP server
+CMD sh -c "if [ ! -f ./data/egw-writings.db ]; then echo '📦 Stitching and extracting chunks at runtime...' && cat /app/data/egw-writings-part-* > ./data/temp.zip && 7z x -y -o./data/ ./data/temp.zip && rm ./data/temp.zip; fi && node dist/server.js --http --port 3000"
 
 # Labels for metadata
 LABEL org.opencontainers.image.title="Christian Heritage Archive Server"
